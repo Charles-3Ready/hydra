@@ -65,6 +65,8 @@ button:disabled {
 .brand,
 .header-actions,
 .toolbar,
+.toolbar-auth,
+.toolbar-runtime,
 .profile-title,
 .row-actions {
   display: flex;
@@ -214,10 +216,35 @@ h1 {
 
 .toolbar {
   min-height: 62px;
-  gap: 8px;
+  gap: 14px;
   padding: 12px 28px;
   border-bottom: 1px solid #dedfe3;
+  justify-content: space-between;
   background: #f9fafb;
+}
+
+.toolbar-auth,
+.toolbar-runtime {
+  gap: 8px;
+}
+
+.toolbar-auth {
+  justify-content: flex-end;
+}
+
+.toolbar-runtime {
+  justify-content: flex-start;
+}
+
+.danger-soft {
+  color: #a13232;
+  border-color: #e0b8b8;
+  background: #fffafa;
+}
+
+.danger-soft:hover {
+  border-color: #c96f6f;
+  background: #fff3f3;
 }
 
 .profiles-section {
@@ -450,6 +477,13 @@ footer {
 
   .toolbar {
     overflow-x: auto;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .toolbar-auth,
+  .toolbar-runtime {
+    justify-content: flex-end;
   }
 
   .toolbar button {

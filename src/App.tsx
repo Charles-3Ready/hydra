@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import {
   Check,
+  CircleX,
   FileUp,
   LogIn,
   Pencil,
@@ -199,6 +200,33 @@ function App() {
     }
   }
 
+  async function openGrok() {
+    setBusy("open-grok");
+    try {
+      await invoke("launch_grok");
+      await refreshInstances();
+      setMessage("Opened Grok");
+    } catch (error) {
+      setMessage(errorMessage(error));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function closeAllGrok() {
+    if (!window.confirm("Close all open Grok sessions?")) return;
+    setBusy("close-grok");
+    try {
+      await invoke("close_grok_instances");
+      await refreshInstances();
+      setMessage("Closed all Grok sessions");
+    } catch (error) {
+      setMessage(errorMessage(error));
+    } finally {
+      setBusy(null);
+    }
+  }
+
   async function rename(profile: Profile) {
     const name = window.prompt("Profile name", profile.name)?.trim();
     if (!name || name === profile.name) return;
@@ -279,18 +307,34 @@ function App() {
       </section>
 
       <section className="toolbar">
-        <button onClick={() => void loginAndImport()} disabled={busy === "login"}>
-          <LogIn size={17} />
-          Login with Grok
-        </button>
-        <button onClick={() => void importCurrent()} disabled={busy === "current"}>
-          <Check size={17} />
-          Import current
-        </button>
-        <button onClick={() => void importFile()} disabled={busy === "file"}>
-          <FileUp size={17} />
-          Import file
-        </button>
+        <div className="toolbar-runtime">
+          <button onClick={() => void openGrok()} disabled={busy === "open-grok"}>
+            <Terminal size={17} />
+            Open Grok
+          </button>
+          <button
+            className="danger-soft"
+            onClick={() => void closeAllGrok()}
+            disabled={busy === "close-grok" || grokInstances.length === 0}
+          >
+            <CircleX size={17} />
+            Close all
+          </button>
+        </div>
+        <div className="toolbar-auth">
+          <button onClick={() => void loginAndImport()} disabled={busy === "login"}>
+            <LogIn size={17} />
+            Login with Grok
+          </button>
+          <button onClick={() => void importCurrent()} disabled={busy === "current"}>
+            <Check size={17} />
+            Import current
+          </button>
+          <button onClick={() => void importFile()} disabled={busy === "file"}>
+            <FileUp size={17} />
+            Import file
+          </button>
+        </div>
       </section>
 
       <section className="profiles-section">

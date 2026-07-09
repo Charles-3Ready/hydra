@@ -355,6 +355,11 @@ fn grok_instances() -> Vec<GrokInstance> {
     grok_instances_impl()
 }
 
+#[tauri::command]
+fn close_grok_instances() -> Result<(), String> {
+    stop_grok_cli()
+}
+
 fn stop_grok_cli() -> Result<(), String> {
     #[cfg(target_os = "windows")]
     {
@@ -444,6 +449,30 @@ fn launch_grok_login() -> Result<(), String> {
             ])
             .spawn()
             .map_err(|error| format!("Could not launch grok login: {error}"))?;
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        return Err("Automatic terminal launch is currently available on Windows only".into());
+    }
+    Ok(())
+}
+
+#[tauri::command]
+fn launch_grok() -> Result<(), String> {
+    #[cfg(target_os = "windows")]
+    {
+        Command::new("cmd")
+            .args([
+                "/C",
+                "start",
+                "",
+                "powershell",
+                "-NoExit",
+                "-Command",
+                "grok",
+            ])
+            .spawn()
+            .map_err(|error| format!("Could not launch grok: {error}"))?;
     }
     #[cfg(not(target_os = "windows"))]
     {
@@ -574,8 +603,10 @@ pub fn run() {
             rename_profile,
             delete_profile,
             launch_grok_login,
+            launch_grok,
             get_profile_usage,
-            grok_instances
+            grok_instances,
+            close_grok_instances
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hydra");
