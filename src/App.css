@@ -273,6 +273,13 @@ h2 {
   transition: width 320ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.usage-track-empty {
+  /* No plan provisioned at all: neither "remaining" (green) nor "used" (red)
+     applies, so neither color does either. Plain neutral, matches the app's
+     existing gray scale rather than the semantic red/green pair. */
+  background: #d7d9de;
+}
+
 .usage-meta {
   color: #6f7580;
   font-variant-numeric: tabular-nums;

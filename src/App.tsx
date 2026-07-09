@@ -285,21 +285,34 @@ function App() {
                       {profile.isActive && <span className="active-pill">Active</span>}
                     </div>
                     <span>{profile.email ?? "Email unavailable"}</span>
-                    <div className="usage-line">
-                      <div className="usage-track">
-                        <div
-                          className="usage-fill"
-                          style={{ width: `${stats?.percent ?? 0}%` }}
-                        />
-                      </div>
-                      <span className={stats?.error ? "usage-error" : ""}>
-                        {stats?.error
-                          ? "Re-login"
-                          : stats?.used != null && stats?.limit != null
-                            ? `${stats.label} · ${formatCredits(stats.used)} / ${formatCredits(stats.limit)} this month`
-                            : stats?.label ?? "Loading..."}
-                      </span>
-                    </div>
+                    {(() => {
+                      // limit === 0 is a real, distinct state from "has usage" and from
+                      // "needs re-login": the billing API returns HTTP 200 with genuine
+                      // zero-everywhere data (checked directly against the live endpoint
+                      // for an affected account) when no monthly plan is provisioned at
+                      // all. Don't call that "Usage available" (implies capacity that
+                      // isn't there) or color it green (implies room to spend).
+                      const noPlan = stats && !stats.error && stats.limit === 0;
+                      return (
+                        <div className="usage-line">
+                          <div className={`usage-track ${noPlan ? "usage-track-empty" : ""}`}>
+                            <div
+                              className="usage-fill"
+                              style={{ width: `${noPlan ? 0 : stats?.percent ?? 0}%` }}
+                            />
+                          </div>
+                          <span className={stats?.error ? "usage-error" : ""}>
+                            {stats?.error
+                              ? "Re-login"
+                              : noPlan
+                                ? "No plan on this account"
+                                : stats?.percent != null && stats?.used != null && stats?.limit != null
+                                  ? `${stats.label} · ${formatCredits(stats.used)} / ${formatCredits(stats.limit)} this month`
+                                  : stats?.label ?? "Loading..."}
+                          </span>
+                        </div>
+                      );
+                    })()}
                   </div>
                   <div className="row-actions">
                     {!profile.isActive && (
