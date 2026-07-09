@@ -128,8 +128,8 @@ h1 {
 }
 
 .active-band {
-  min-height: 110px;
-  padding: 22px 30px;
+  min-height: 64px;
+  padding: 12px 28px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -138,8 +138,9 @@ h1 {
 }
 
 .active-copy {
-  display: grid;
-  gap: 4px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
   min-width: 0;
 }
 
@@ -151,13 +152,13 @@ h1 {
 }
 
 .active-band strong {
-  font-size: 22px;
+  font-size: 16px;
   letter-spacing: 0;
 }
 
 .active-band span:last-child {
   color: #b9bec6;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .eyebrow {
@@ -173,9 +174,9 @@ h1 {
 }
 
 .instance-chip {
-  min-width: 166px;
-  min-height: 38px;
-  padding: 6px 9px;
+  min-width: 154px;
+  min-height: 34px;
+  padding: 5px 8px;
   display: flex;
   align-items: center;
   gap: 9px;
@@ -449,13 +450,18 @@ footer {
   .active-band {
     padding-left: 18px;
     padding-right: 18px;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .active-copy {
     align-items: flex-start;
     flex-direction: column;
-    gap: 14px;
+    gap: 8px;
   }
 
   .runtime-panel {
-    align-self: flex-end;
+    align-self: center;
   }
 
   .instance-chip {

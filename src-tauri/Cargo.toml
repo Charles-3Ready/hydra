@@ -1,6 +1,6 @@
 [package]
 name = "hydra-desktop"
-version = "0.1.1"
+version = "1.0.0"
 description = "Local profile manager for the Grok CLI"
 authors = ["Charles 3Ready"]
 license = "MIT"
