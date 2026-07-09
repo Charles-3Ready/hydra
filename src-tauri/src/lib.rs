@@ -277,17 +277,6 @@ fn import_profile_file(path: String, name: Option<String>) -> Result<ProfileView
     upsert_auth(raw, name)
 }
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-struct SwitchOutcome {
-    grok_running: bool,
-}
-
-// A running Grok CLI session keeps its account in memory; switching auth.json
-// only affects sessions started afterwards. Verified live: with a session open
-// on account A, a Hydra switch to B left the open session on A while a freshly
-// started process correctly picked up B. Detecting this lets the UI warn
-// instead of letting the switch look broken.
 fn grok_cli_running() -> bool {
     #[cfg(target_os = "windows")]
     {
@@ -306,8 +295,34 @@ fn grok_cli_running() -> bool {
     }
 }
 
+fn stop_grok_cli() -> Result<(), String> {
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+        let output = Command::new("taskkill")
+            .args(["/F", "/IM", "grok.exe", "/T"])
+            .creation_flags(CREATE_NO_WINDOW)
+            .output()
+            .map_err(|error| format!("Could not close Grok CLI: {error}"))?;
+        if !output.status.success() && grok_cli_running() {
+            return Err(format!(
+                "Could not close Grok CLI: {}",
+                String::from_utf8_lossy(&output.stderr).trim()
+            ));
+        }
+    }
+    Ok(())
+}
+
 #[tauri::command]
-fn switch_profile(profile_id: String) -> Result<SwitchOutcome, String> {
+fn switch_profile(profile_id: String, close_running: bool) -> Result<(), String> {
+    if grok_cli_running() {
+        if !close_running {
+            return Err("Close the running Grok session before switching".into());
+        }
+        stop_grok_cli()?;
+    }
     let mut store = load_store()?;
     let profile = store
         .profiles
@@ -323,9 +338,7 @@ fn switch_profile(profile_id: String) -> Result<SwitchOutcome, String> {
     }
     profile.last_used_at = Some(Utc::now());
     save_store(&store)?;
-    Ok(SwitchOutcome {
-        grok_running: grok_cli_running(),
-    })
+    Ok(())
 }
 
 #[tauri::command]

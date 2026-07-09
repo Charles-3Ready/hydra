@@ -98,17 +98,18 @@ function App() {
   }, [profiles.length]);
 
   async function switchTo(profile: Profile) {
+    const closeRunning = window.confirm(
+      `Switch to ${profile.name}?\n\nAny running Grok CLI session must close so it cannot restore the previous account.`,
+    );
+    if (!closeRunning) return;
     setBusy(profile.id);
     try {
-      const outcome = await invoke<{ grokRunning: boolean }>("switch_profile", {
+      await invoke("switch_profile", {
         profileId: profile.id,
+        closeRunning: true,
       });
       await load();
-      setMessage(
-        outcome.grokRunning
-          ? `Active profile: ${profile.name} — a Grok session is still running and keeps the previous account until you restart it`
-          : `Active profile: ${profile.name}`,
-      );
+      setMessage(`Active profile: ${profile.name}. Start a new Grok session to use it.`);
     } catch (error) {
       setMessage(errorMessage(error));
     } finally {
