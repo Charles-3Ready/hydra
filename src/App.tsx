@@ -251,28 +251,30 @@ function App() {
       </header>
 
       <section className="active-band">
-        <div>
-          <span className="eyebrow">ACTIVE CLI PROFILE</span>
+        <div className="active-copy">
+          <div className="active-heading">
+            <span className="eyebrow">ACTIVE CLI PROFILE</span>
+            <div className={`instance-chip ${grokInstances.length ? "instance-chip-live" : ""}`}>
+              <Terminal size={15} />
+              <div>
+                <strong>
+                  {grokInstances.length
+                    ? `${grokInstances.length} Grok session${grokInstances.length === 1 ? "" : "s"} open`
+                    : "No Grok sessions"}
+                </strong>
+                <span>
+                  {grokInstances.length
+                    ? `PID ${grokInstances.map((item) => item.pid).join(", ")}`
+                    : "Switch is clear"}
+                </span>
+              </div>
+            </div>
+          </div>
           <strong>{active?.name ?? "No matching profile"}</strong>
           <span>{active?.email ?? "Import the current Grok login to begin"}</span>
         </div>
         <div className="runtime-panel">
           <ShieldCheck size={34} aria-hidden="true" />
-          <div className={`instance-chip ${grokInstances.length ? "instance-chip-live" : ""}`}>
-            <Terminal size={15} />
-            <div>
-              <strong>
-                {grokInstances.length
-                  ? `${grokInstances.length} Grok session${grokInstances.length === 1 ? "" : "s"} open`
-                  : "No Grok sessions"}
-              </strong>
-              <span>
-                {grokInstances.length
-                  ? `PID ${grokInstances.map((item) => item.pid).join(", ")}`
-                  : "Switch is clear"}
-              </span>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -342,20 +344,20 @@ function App() {
                       // no credits-plan usage is tracked here. Don't call it "Usage
                       // available" (implies capacity that isn't there) or color it green
                       // (implies room to spend).
-                      const noPlan = stats && !stats.error && stats.limit === 0;
+                      const exhausted = stats && !stats.error && stats.limit === 0;
                       return (
                         <div className="usage-line">
-                          <div className={`usage-track ${noPlan ? "usage-track-empty" : ""}`}>
+                          <div className={`usage-track ${exhausted ? "usage-track-exhausted" : ""}`}>
                             <div
                               className="usage-fill"
-                              style={{ width: `${noPlan ? 0 : stats?.percent ?? 0}%` }}
+                              style={{ width: `${exhausted ? 100 : stats?.percent ?? 0}%` }}
                             />
                           </div>
                           <span className={stats?.error ? "usage-error" : ""}>
                             {stats?.error
                               ? "Re-login"
-                              : noPlan
-                                ? "No credits usage tracked (SuperGrok or no plan)"
+                              : exhausted
+                                ? "Monthly usage exhausted"
                                 : stats?.percent != null && stats?.used != null && stats?.limit != null
                                   ? `${stats.label} · ${formatCredits(stats.used)} / ${formatCredits(stats.limit)} this month`
                                   : stats?.label ?? "Loading..."}
