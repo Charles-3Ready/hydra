@@ -15,6 +15,7 @@ use tauri::{
 use uuid::Uuid;
 
 const BILLING_URL: &str = "https://cli-chat-proxy.grok.com/v1/billing";
+const BILLING_CREDITS_URL: &str = "https://cli-chat-proxy.grok.com/v1/billing?format=credits";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct Profile {
@@ -58,6 +59,9 @@ struct UsageView {
     limit: Option<f64>,
     percent: Option<f64>,
     label: String,
+    period_label: Option<String>,
+    resets_at: Option<String>,
+    source: String,
     error: Option<String>,
 }
 
@@ -501,6 +505,40 @@ fn find_number(value: &Value, keys: &[&str]) -> Option<f64> {
     }
 }
 
+fn value_at_path<'a>(value: &'a Value, path: &[&str]) -> Option<&'a Value> {
+    let mut current = value;
+    for key in path {
+        current = current.get(*key)?;
+    }
+    Some(current)
+}
+
+fn find_string(value: &Value, keys: &[&str]) -> Option<String> {
+    match value {
+        Value::Object(object) => {
+            for key in keys {
+                if let Some(candidate) = object.get(*key).and_then(Value::as_str) {
+                    if !candidate.trim().is_empty() {
+                        return Some(candidate.to_string());
+                    }
+                }
+            }
+            object.values().find_map(|value| find_string(value, keys))
+        }
+        Value::Array(items) => items.iter().find_map(|value| find_string(value, keys)),
+        _ => None,
+    }
+}
+
+fn period_label(period_type: Option<&str>) -> Option<String> {
+    match period_type {
+        Some("USAGE_PERIOD_TYPE_WEEKLY") => Some("Weekly Build limit".into()),
+        Some("USAGE_PERIOD_TYPE_MONTHLY") => Some("Monthly credits".into()),
+        Some(value) if !value.trim().is_empty() => Some(value.replace("USAGE_PERIOD_TYPE_", "")),
+        _ => None,
+    }
+}
+
 #[tauri::command]
 async fn get_profile_usage(profile_id: String) -> Result<UsageView, String> {
     let store = load_store()?;
@@ -510,8 +548,9 @@ async fn get_profile_usage(profile_id: String) -> Result<UsageView, String> {
         .find(|profile| profile.id == profile_id)
         .ok_or("Profile not found")?;
     let token = access_token(&profile.raw_auth_json).ok_or("Re-login required")?;
-    let response = reqwest::Client::new()
-        .get(BILLING_URL)
+    let client = reqwest::Client::new();
+    let response = client
+        .get(BILLING_CREDITS_URL)
         .bearer_auth(token)
         .send()
         .await
@@ -523,6 +562,61 @@ async fn get_profile_usage(profile_id: String) -> Result<UsageView, String> {
             limit: None,
             percent: None,
             label: "Re-login".into(),
+            period_label: None,
+            resets_at: None,
+            source: "unavailable".into(),
+            error: Some("Credentials expired or were revoked".into()),
+        });
+    }
+    if !response.status().is_success() {
+        return Err(format!("Usage service returned {}", response.status()));
+    }
+    let body: Value = response
+        .json()
+        .await
+        .map_err(|error| format!("Usage response was invalid: {error}"))?;
+    let weekly_percent = find_number(&body, &["creditUsagePercent"]);
+    let current_period_type = value_at_path(&body, &["config", "currentPeriod", "type"])
+        .and_then(Value::as_str)
+        .or_else(|| value_at_path(&body, &["currentPeriod", "type"]).and_then(Value::as_str));
+    let current_period_end = value_at_path(&body, &["config", "currentPeriod", "end"])
+        .and_then(Value::as_str)
+        .or_else(|| value_at_path(&body, &["currentPeriod", "end"]).and_then(Value::as_str))
+        .map(str::to_string)
+        .or_else(|| find_string(&body, &["billingPeriodEnd"]));
+    let weekly_label = period_label(current_period_type);
+    if weekly_percent.is_some() || current_period_type == Some("USAGE_PERIOD_TYPE_WEEKLY") {
+        return Ok(UsageView {
+            profile_id,
+            used: None,
+            limit: None,
+            percent: weekly_percent.map(|value| value.clamp(0.0, 100.0)),
+            label: weekly_percent
+                .map(|value| format!("{value:.0}% used"))
+                .unwrap_or_else(|| "Usage available".into()),
+            period_label: weekly_label,
+            resets_at: current_period_end,
+            source: "weekly".into(),
+            error: None,
+        });
+    }
+
+    let response = client
+        .get(BILLING_URL)
+        .bearer_auth(access_token(&profile.raw_auth_json).ok_or("Re-login required")?)
+        .send()
+        .await
+        .map_err(|error| format!("Usage request failed: {error}"))?;
+    if response.status() == reqwest::StatusCode::UNAUTHORIZED {
+        return Ok(UsageView {
+            profile_id,
+            used: None,
+            limit: None,
+            percent: None,
+            label: "Re-login".into(),
+            period_label: None,
+            resets_at: None,
+            source: "unavailable".into(),
             error: Some("Credentials expired or were revoked".into()),
         });
     }
@@ -550,6 +644,9 @@ async fn get_profile_usage(profile_id: String) -> Result<UsageView, String> {
         label: percent
             .map(|value| format!("{value:.0}% used"))
             .unwrap_or_else(|| "Usage available".into()),
+        period_label: Some("Monthly credits".into()),
+        resets_at: find_string(&body, &["billingPeriodEnd"]),
+        source: "monthly".into(),
         error: None,
     })
 }

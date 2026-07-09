@@ -41,6 +41,9 @@ type Usage = {
   limit?: number;
   percent?: number;
   label: string;
+  periodLabel?: string;
+  resetsAt?: string;
+  source: string;
   error?: string;
 };
 
@@ -56,6 +59,18 @@ function formatCredits(value: number) {
   return new Intl.NumberFormat(undefined, {
     maximumFractionDigits: value < 10 ? 2 : 0,
   }).format(value);
+}
+
+function formatReset(value?: string) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
 }
 
 function App() {
@@ -105,6 +120,7 @@ function App() {
             profileId: profile.id,
             label: "Unavailable",
             error: errorMessage(error),
+            source: "unavailable",
           } satisfies Usage;
         }
       }),
@@ -383,6 +399,25 @@ function App() {
                       // models list succeeds, billing returns zero capacity, and chat
                       // returns HTTP 402. Treat this as no active subscription.
                       const noActiveSubscription = stats && !stats.error && stats.limit === 0;
+                      const resetText = formatReset(stats?.resetsAt);
+                      const usageText = (() => {
+                        if (!stats) return "Loading...";
+                        if (stats.error) return "Re-login";
+                        if (noActiveSubscription) return "No active subscription";
+                        if (stats.source === "weekly") {
+                          return [
+                            stats.percent != null ? stats.label : stats.periodLabel ?? stats.label,
+                            stats.percent != null ? stats.periodLabel : null,
+                            resetText ? `resets ${resetText}` : null,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ");
+                        }
+                        if (stats.percent != null && stats.used != null && stats.limit != null) {
+                          return `${stats.label} · ${formatCredits(stats.used)} / ${formatCredits(stats.limit)} this month`;
+                        }
+                        return stats.label;
+                      })();
                       return (
                         <div className="usage-line">
                           <div className={`usage-track ${noActiveSubscription ? "usage-track-unavailable" : ""}`}>
@@ -392,13 +427,7 @@ function App() {
                             />
                           </div>
                           <span className={stats?.error ? "usage-error" : ""}>
-                            {stats?.error
-                              ? "Re-login"
-                              : noActiveSubscription
-                                ? "No active subscription"
-                                : stats?.percent != null && stats?.used != null && stats?.limit != null
-                                  ? `${stats.label} · ${formatCredits(stats.used)} / ${formatCredits(stats.limit)} this month`
-                                  : stats?.label ?? "Loading..."}
+                            {usageText}
                           </span>
                         </div>
                       );
