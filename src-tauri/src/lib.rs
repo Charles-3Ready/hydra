@@ -414,6 +414,20 @@ async fn get_profile_usage(profile_id: String) -> Result<UsageView, String> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::ffi::OsStrExt;
+        use windows_sys::Win32::UI::Shell::SetCurrentProcessExplicitAppUserModelID;
+
+        let app_id: Vec<u16> = std::ffi::OsStr::new("com.charles.grok-hydra.desktop")
+            .encode_wide()
+            .chain(std::iter::once(0))
+            .collect();
+        unsafe {
+            let _ = SetCurrentProcessExplicitAppUserModelID(app_id.as_ptr());
+        }
+    }
+
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())

@@ -1,6 +1,6 @@
 [package]
-name = "grok-hydra"
-version = "0.1.0"
+name = "grok-hydra-desktop"
+version = "0.1.1"
 description = "Local profile manager for the Grok CLI"
 authors = ["Charles 3Ready"]
 license = "MIT"
@@ -31,3 +31,6 @@ dirs = "6"
 hex = "0.4"
 sha2 = "0.10"
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = ["Win32_UI_Shell"] }

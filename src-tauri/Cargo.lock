@@ -1375,8 +1375,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "grok-hydra"
-version = "0.1.0"
+name = "grok-hydra-desktop"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "chrono",
@@ -1391,6 +1391,7 @@ dependencies = [
  "tauri-plugin-dialog",
  "tauri-plugin-opener",
  "uuid",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
