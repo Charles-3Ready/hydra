@@ -288,10 +288,15 @@ function App() {
                     {(() => {
                       // limit === 0 is a real, distinct state from "has usage" and from
                       // "needs re-login": the billing API returns HTTP 200 with genuine
-                      // zero-everywhere data (checked directly against the live endpoint
-                      // for an affected account) when no monthly plan is provisioned at
-                      // all. Don't call that "Usage available" (implies capacity that
-                      // isn't there) or color it green (implies room to spend).
+                      // zero-everywhere data (checked directly against the live endpoint).
+                      // Don't assert *why* it's zero -- confirmed the JWT's tier claim is
+                      // identical (tier: 1) between a real SuperGrok subscription (zero
+                      // credits by design, unrelated weekly limits this endpoint can't
+                      // see) and an account that might genuinely have no plan, so Hydra
+                      // has no reliable way to tell those apart. State only what's true:
+                      // no credits-plan usage is tracked here. Don't call it "Usage
+                      // available" (implies capacity that isn't there) or color it green
+                      // (implies room to spend).
                       const noPlan = stats && !stats.error && stats.limit === 0;
                       return (
                         <div className="usage-line">
@@ -305,7 +310,7 @@ function App() {
                             {stats?.error
                               ? "Re-login"
                               : noPlan
-                                ? "No plan on this account"
+                                ? "No credits usage tracked (SuperGrok or no plan)"
                                 : stats?.percent != null && stats?.used != null && stats?.limit != null
                                   ? `${stats.label} · ${formatCredits(stats.used)} / ${formatCredits(stats.limit)} this month`
                                   : stats?.label ?? "Loading..."}
