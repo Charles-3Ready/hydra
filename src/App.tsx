@@ -280,28 +280,28 @@ function App() {
 
       <section className="active-band">
         <div className="active-copy">
-          <div className="active-heading">
-            <span className="eyebrow">ACTIVE CLI PROFILE</span>
-            <div className={`instance-chip ${grokInstances.length ? "instance-chip-live" : ""}`}>
-              <Terminal size={15} />
-              <div>
-                <strong>
-                  {grokInstances.length
-                    ? `${grokInstances.length} Grok session${grokInstances.length === 1 ? "" : "s"} open`
-                    : "No Grok sessions"}
-                </strong>
-                <span>
-                  {grokInstances.length
-                    ? `PID ${grokInstances.map((item) => item.pid).join(", ")}`
-                    : "Switch is clear"}
-                </span>
-              </div>
-            </div>
+          <span className="eyebrow">CURRENT CLI PROFILE</span>
+          <div className="account-details">
+            <strong>{active?.name ?? "No matching profile"}</strong>
+            <span>{active?.email ?? "Import the current Grok login to begin"}</span>
           </div>
-          <strong>{active?.name ?? "No matching profile"}</strong>
-          <span>{active?.email ?? "Import the current Grok login to begin"}</span>
         </div>
         <div className="runtime-panel">
+          <div className={`instance-chip ${grokInstances.length ? "instance-chip-live" : ""}`}>
+            <Terminal size={15} />
+            <div>
+              <strong>
+                {grokInstances.length
+                  ? `${grokInstances.length} Grok session${grokInstances.length === 1 ? "" : "s"} open`
+                  : "No Grok sessions"}
+              </strong>
+              <span>
+                {grokInstances.length
+                  ? `PID ${grokInstances.map((item) => item.pid).join(", ")}`
+                  : "Switch is clear"}
+              </span>
+            </div>
+          </div>
           <ShieldCheck size={34} aria-hidden="true" />
         </div>
       </section>

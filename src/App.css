@@ -144,11 +144,10 @@ h1 {
   min-width: 0;
 }
 
-.active-heading {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
+.account-details {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
 }
 
 .active-band strong {
@@ -156,7 +155,10 @@ h1 {
   letter-spacing: 0;
 }
 
-.active-band span:last-child {
+.account-details span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: #b9bec6;
   font-size: 12px;
 }
@@ -171,6 +173,9 @@ h1 {
 .runtime-panel {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-left: auto;
 }
 
 .instance-chip {
@@ -461,7 +466,9 @@ footer {
   }
 
   .runtime-panel {
-    align-self: center;
+    align-self: stretch;
+    justify-content: space-between;
+    margin-left: 0;
   }
 
   .instance-chip {
