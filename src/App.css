@@ -361,7 +361,7 @@ h2 {
   transition: width 320ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.usage-track-exhausted {
+.usage-track-unavailable {
   background: #f0caca;
 }
 

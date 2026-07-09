@@ -377,31 +377,25 @@ function App() {
                     </div>
                     <span>{profile.email ?? "Email unavailable"}</span>
                     {(() => {
-                      // limit === 0 is a real, distinct state from "has usage" and from
-                      // "needs re-login": the billing API returns HTTP 200 with genuine
-                      // zero-everywhere data (checked directly against the live endpoint).
-                      // Don't assert *why* it's zero -- confirmed the JWT's tier claim is
-                      // identical (tier: 1) between a real SuperGrok subscription (zero
-                      // credits by design, unrelated weekly limits this endpoint can't
-                      // see) and an account that might genuinely have no plan, so Hydra
-                      // has no reliable way to tell those apart. State only what's true:
-                      // no credits-plan usage is tracked here. Don't call it "Usage
-                      // available" (implies capacity that isn't there) or color it green
-                      // (implies room to spend).
-                      const exhausted = stats && !stats.error && stats.limit === 0;
+                      // limit === 0 with a successful billing response is distinct from
+                      // "needs re-login": the credential works, but the account has no
+                      // usable Build allocation. Confirmed on the PhilohrDebski profile:
+                      // models list succeeds, billing returns zero capacity, and chat
+                      // returns HTTP 402. Treat this as no active subscription.
+                      const noActiveSubscription = stats && !stats.error && stats.limit === 0;
                       return (
                         <div className="usage-line">
-                          <div className={`usage-track ${exhausted ? "usage-track-exhausted" : ""}`}>
+                          <div className={`usage-track ${noActiveSubscription ? "usage-track-unavailable" : ""}`}>
                             <div
                               className="usage-fill"
-                              style={{ width: `${exhausted ? 100 : stats?.percent ?? 0}%` }}
+                              style={{ width: `${noActiveSubscription ? 100 : stats?.percent ?? 0}%` }}
                             />
                           </div>
                           <span className={stats?.error ? "usage-error" : ""}>
                             {stats?.error
                               ? "Re-login"
-                              : exhausted
-                                ? "Weekly usage exhausted"
+                              : noActiveSubscription
+                                ? "No active subscription"
                                 : stats?.percent != null && stats?.used != null && stats?.limit != null
                                   ? `${stats.label} · ${formatCredits(stats.used)} / ${formatCredits(stats.limit)} this month`
                                   : stats?.label ?? "Loading..."}
