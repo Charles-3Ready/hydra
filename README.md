@@ -1,7 +1,9 @@
-# Grok Hydra
+# Hydra
 
-An independent, unofficial Windows desktop profile manager for the Grok CLI.
-Grok Hydra helps developers select among personal, work, client, or testing
+Grok Build CLI Profile Manager.
+
+Hydra is an independent, unofficial Windows desktop profile manager for the
+Grok CLI. It helps developers select among personal, work, client, or testing
 profiles they own or are authorized to use.
 
 ## Features
@@ -25,7 +27,7 @@ Start a new Grok session after switching and run:
 /status
 ```
 
-The account shown by Grok should match the active profile in Grok Hydra.
+The account shown by Grok should match the active profile in Hydra.
 
 ## Build
 
@@ -46,7 +48,7 @@ Installers are written to `src-tauri/target/release/bundle/`.
 Auth files contain sensitive credentials. They remain on the local machine
 unless the user explicitly moves them. Never commit or share auth files.
 
-Use Grok Hydra only with profiles you own or are authorized to access. It does
+Use Hydra only with profiles you own or are authorized to access. It does
 not create accounts, bypass authentication, alter service limits, or recover
 revoked credentials. Users remain responsible for the terms and policies
 applicable to their accounts.
@@ -58,7 +60,7 @@ from a fresh Tauri scaffold. It does not contain source code or history from
 the earlier unlicensed prototype or its upstream repository. See
 [`CLEAN_ROOM_SPEC.md`](CLEAN_ROOM_SPEC.md).
 
-Grok Hydra is not affiliated with, endorsed by, or sponsored by xAI. "Grok"
+Hydra is not affiliated with, endorsed by, or sponsored by xAI. "Grok"
 and related marks belong to their respective owners.
 
 ## License

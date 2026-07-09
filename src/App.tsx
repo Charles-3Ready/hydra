@@ -15,6 +15,9 @@ import {
 import logo from "./assets/hydra-icon.png";
 import "./App.css";
 
+const APP_NAME = "Hydra";
+const APP_SUBTITLE = "Grok Build CLI Profile Manager";
+
 type Profile = {
   id: string;
   name: string;
@@ -193,8 +196,8 @@ function App() {
         <div className="brand">
           <img src={logo} alt="" className="brand-mark" />
           <div>
-            <h1>Grok Hydra</h1>
-            <p>Local CLI profile manager</p>
+            <h1>{APP_NAME}</h1>
+            <p>{APP_SUBTITLE}</p>
           </div>
         </div>
         <div className="header-actions">
@@ -250,7 +253,7 @@ function App() {
             <img src={logo} alt="" />
             <h2>Add your first authorized profile</h2>
             <p>
-              Grok Hydra launches the official login and imports the local
+              Hydra launches the official login and imports the local
               credential file after authentication finishes.
             </p>
             <button className="primary" onClick={() => void loginAndImport()}>

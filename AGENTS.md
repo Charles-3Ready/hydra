@@ -1,6 +1,6 @@
-# Grok Hydra
+# Hydra
 
-This is the independent implementation of Grok Hydra. Do not copy source,
+This is the independent implementation of Hydra. Do not copy source,
 assets, configuration, or tests from `../grok-switcher` or
 `Lampese/codex-switcher`.
 

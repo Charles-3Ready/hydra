@@ -432,12 +432,12 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
-            let open = MenuItem::with_id(app, "open", "Open Grok Hydra", true, None::<&str>)?;
+            let open = MenuItem::with_id(app, "open", "Open Hydra", true, None::<&str>)?;
             let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&open, &quit])?;
             TrayIconBuilder::new()
                 .icon(app.default_window_icon().cloned().expect("app icon"))
-                .tooltip("Grok Hydra")
+                .tooltip("Hydra - Grok Build CLI Profile Manager")
                 .menu(&menu)
                 .on_menu_event(|app, event| match event.id().as_ref() {
                     "open" => {
@@ -464,7 +464,7 @@ pub fn run() {
             get_profile_usage
         ])
         .run(tauri::generate_context!())
-        .expect("error while running Grok Hydra");
+        .expect("error while running Hydra");
 }
 
 #[cfg(test)]

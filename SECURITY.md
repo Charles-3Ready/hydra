@@ -7,7 +7,7 @@ privately to the repository owner instead of opening a public issue.
 
 ## Credential handling
 
-Grok Hydra stores profile credentials under the current user's home directory.
+Hydra stores profile credentials under the current user's home directory.
 Never attach `auth.json`, `profiles.json`, exported credentials, access tokens,
 or refresh tokens to an issue.
 
