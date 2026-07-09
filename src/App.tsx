@@ -9,6 +9,7 @@ import {
   Plus,
   RefreshCw,
   ShieldCheck,
+  Terminal,
   Trash2,
   Zap,
 } from "lucide-react";
@@ -42,6 +43,10 @@ type Usage = {
   error?: string;
 };
 
+type GrokInstance = {
+  pid: number;
+};
+
 function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : String(error);
 }
@@ -55,8 +60,17 @@ function formatCredits(value: number) {
 function App() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [usage, setUsage] = useState<Record<string, Usage>>({});
+  const [grokInstances, setGrokInstances] = useState<GrokInstance[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState("Ready");
+
+  const refreshInstances = useCallback(async () => {
+    try {
+      setGrokInstances(await invoke<GrokInstance[]>("grok_instances"));
+    } catch {
+      setGrokInstances([]);
+    }
+  }, []);
 
   const load = useCallback(async () => {
     try {
@@ -68,7 +82,13 @@ function App() {
 
   useEffect(() => {
     void load();
-  }, [load]);
+    void refreshInstances();
+  }, [load, refreshInstances]);
+
+  useEffect(() => {
+    const id = window.setInterval(() => void refreshInstances(), 5000);
+    return () => window.clearInterval(id);
+  }, [refreshInstances]);
 
   const refreshUsage = useCallback(async (items = profiles) => {
     if (!items.length) return;
@@ -109,6 +129,7 @@ function App() {
         closeRunning: true,
       });
       await load();
+      await refreshInstances();
       setMessage(`Active profile: ${profile.name}. Start a new Grok session to use it.`);
     } catch (error) {
       setMessage(errorMessage(error));
@@ -235,7 +256,24 @@ function App() {
           <strong>{active?.name ?? "No matching profile"}</strong>
           <span>{active?.email ?? "Import the current Grok login to begin"}</span>
         </div>
-        <ShieldCheck size={34} aria-hidden="true" />
+        <div className="runtime-panel">
+          <ShieldCheck size={34} aria-hidden="true" />
+          <div className={`instance-chip ${grokInstances.length ? "instance-chip-live" : ""}`}>
+            <Terminal size={15} />
+            <div>
+              <strong>
+                {grokInstances.length
+                  ? `${grokInstances.length} Grok session${grokInstances.length === 1 ? "" : "s"} open`
+                  : "No Grok sessions"}
+              </strong>
+              <span>
+                {grokInstances.length
+                  ? `PID ${grokInstances.map((item) => item.pid).join(", ")}`
+                  : "Switch is clear"}
+              </span>
+            </div>
+          </div>
+        </div>
       </section>
 
       <section className="toolbar">

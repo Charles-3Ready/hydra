@@ -61,6 +61,12 @@ struct UsageView {
     error: Option<String>,
 }
 
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct GrokInstance {
+    pid: u32,
+}
+
 fn config_dir() -> Result<PathBuf, String> {
     let home = dirs::home_dir().ok_or("Unable to locate the home directory")?;
     let dir = home.join(".hydra");
@@ -277,22 +283,76 @@ fn import_profile_file(path: String, name: Option<String>) -> Result<ProfileView
     upsert_auth(raw, name)
 }
 
-fn grok_cli_running() -> bool {
+#[cfg(target_os = "windows")]
+fn parse_tasklist_csv_line(line: &str) -> Vec<String> {
+    let mut fields = Vec::new();
+    let mut field = String::new();
+    let mut in_quotes = false;
+    let mut chars = line.chars().peekable();
+    while let Some(ch) = chars.next() {
+        match ch {
+            '"' if in_quotes && chars.peek() == Some(&'"') => {
+                field.push('"');
+                chars.next();
+            }
+            '"' => in_quotes = !in_quotes,
+            ',' if !in_quotes => {
+                fields.push(field.clone());
+                field.clear();
+            }
+            _ => field.push(ch),
+        }
+    }
+    fields.push(field);
+    fields
+}
+
+fn grok_instances_impl() -> Vec<GrokInstance> {
     #[cfg(target_os = "windows")]
     {
         use std::os::windows::process::CommandExt;
         const CREATE_NO_WINDOW: u32 = 0x0800_0000;
         Command::new("tasklist")
-            .args(["/FI", "IMAGENAME eq grok.exe", "/NH"])
+            .args(["/FI", "IMAGENAME eq grok.exe", "/FO", "CSV", "/NH"])
             .creation_flags(CREATE_NO_WINDOW)
             .output()
-            .map(|output| String::from_utf8_lossy(&output.stdout).contains("grok.exe"))
-            .unwrap_or(false)
+            .ok()
+            .map(|output| {
+                String::from_utf8_lossy(&output.stdout)
+                    .lines()
+                    .filter_map(|line| {
+                        let fields = parse_tasklist_csv_line(line);
+                        if fields
+                            .first()
+                            .map(|name| name.eq_ignore_ascii_case("grok.exe"))
+                            == Some(true)
+                        {
+                            fields
+                                .get(1)?
+                                .parse::<u32>()
+                                .ok()
+                                .map(|pid| GrokInstance { pid })
+                        } else {
+                            None
+                        }
+                    })
+                    .collect()
+            })
+            .unwrap_or_default()
     }
     #[cfg(not(target_os = "windows"))]
     {
-        false
+        Vec::new()
     }
+}
+
+fn grok_cli_running() -> bool {
+    !grok_instances_impl().is_empty()
+}
+
+#[tauri::command]
+fn grok_instances() -> Vec<GrokInstance> {
+    grok_instances_impl()
 }
 
 fn stop_grok_cli() -> Result<(), String> {
@@ -514,7 +574,8 @@ pub fn run() {
             rename_profile,
             delete_profile,
             launch_grok_login,
-            get_profile_usage
+            get_profile_usage,
+            grok_instances
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hydra");

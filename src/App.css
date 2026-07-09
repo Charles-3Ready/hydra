@@ -157,6 +157,54 @@ h1 {
   letter-spacing: 1px;
 }
 
+.runtime-panel {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.instance-chip {
+  min-width: 174px;
+  min-height: 48px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid #3d424a;
+  border-radius: 6px;
+  color: #d5d9df;
+  background: #23272d;
+}
+
+.instance-chip-live {
+  border-color: #8b6e25;
+  color: #ffe0a1;
+  background: #2b2518;
+}
+
+.instance-chip div {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.instance-chip strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.instance-chip span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: currentColor;
+  opacity: 0.72;
+  font-size: 10px;
+}
+
 .toolbar {
   min-height: 62px;
   gap: 8px;
@@ -370,6 +418,19 @@ footer {
   .active-band {
     padding-left: 18px;
     padding-right: 18px;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .runtime-panel {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .instance-chip {
+    flex: 1;
+    min-width: 0;
   }
 
   .brand p {
