@@ -6,6 +6,10 @@ Hydra is an independent, unofficial Windows desktop profile manager for the
 Grok CLI. It helps developers select among personal, work, client, or testing
 profiles they own or are authorized to use.
 
+<p align="center">
+  <img src="docs/social/post/hydra-features-16x9.png" alt="Hydra — switch profiles, see usage, stay local" width="900" />
+</p>
+
 ## Features
 
 - Official `grok login` integration with automatic local profile import
