@@ -63,6 +63,18 @@ the earlier unlicensed prototype or its upstream repository. See
 Hydra is not affiliated with, endorsed by, or sponsored by xAI. "Grok"
 and related marks belong to their respective owners.
 
+## Support
+
+Hydra is free and open source (MIT). If it helps you manage Grok CLI profiles and you want to tip:
+
+[![Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/3readyproto)
+
+Or open [ko-fi.com/3readyproto](https://ko-fi.com/3readyproto). Optional.
+
 ## License
 
 [MIT](LICENSE)
+
+---
+
+**Charles-3Ready** · [Ko-fi](https://ko-fi.com/3readyproto)
