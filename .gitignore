@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Agent session caches / scratch (keep outputs/ tracked — those are review artifacts)
+.playwright-cli/
+output/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

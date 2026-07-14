@@ -3,25 +3,34 @@
 Many Heads. One Command.
 
 Hydra is an independent, unofficial Windows desktop profile manager for the
-Grok CLI. It helps developers select among personal, work, client, or testing
-profiles they own or are authorized to use.
+Grok CLI. Keep personal, work, client, and testing heads on one machine, switch
+between them cleanly, and spend less time re-logging when tokens go stale.
 
 <p align="center">
-  <img src="docs/social/post/hydra-features-16x9.png" alt="Hydra — switch profiles, see usage, stay local" width="900" />
+  <img src="docs/social/post/hydra-hero-16x9.png" alt="Hydra — Many Heads. One Command." width="900" />
 </p>
 
 ## Features
 
-- Official `grok login` integration with automatic local profile import
+- **Strengthened silent token renewal** — auto-refresh keeps stored profiles
+  ready so you re-login less when sessions go stale
+- Official `grok login` with automatic local profile import
 - Manual import from the current or a selected `auth.json`
 - Verified, atomic profile switching with a local backup
 - Active-profile detection from the live Grok auth file
-- Profile rename and removal
-- Per-profile usage display with isolated error states
-- Clear `Re-login` status for expired credentials
-- Native Windows dashboard and system tray
+- Fuel-style weekly usage meters (green remaining, red used) per profile
+- Auth health chips: ready / renewing / re-login required
+- Frameless night-first console UI with icon theme toggle and hide-to-tray
 - Local-only credential storage under `~/.hydra`
-- Optimized multi-resolution Windows icon
+- System tray open / quit; multi-resolution Windows icon
+
+<p align="center">
+  <img src="docs/social/post/hydra-features-16x9.png" alt="What Hydra does now" width="900" />
+</p>
+
+<p align="center">
+  <img src="docs/social/post/hydra-app-night.png" alt="Hydra night dashboard" width="720" />
+</p>
 
 ## Verify a switch
 
@@ -32,6 +41,14 @@ Start a new Grok session after switching and run:
 ```
 
 The account shown by Grok should match the active profile in Hydra.
+
+## Install (Windows)
+
+Download the latest release from
+[GitHub Releases](https://github.com/Charles-3Ready/hydra/releases):
+
+- `Hydra_1.1.0_x64-setup.exe` — NSIS installer (recommended)
+- `Hydra_1.1.0_x64_en-US.msi` — MSI
 
 ## Build
 
