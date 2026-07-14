@@ -16,6 +16,15 @@ dist-ssr
 .playwright-cli/
 output/
 
+# Never commit raw live captures or strip diagnostics — they contain real profile IDs.
+# Keep only scrubbed demo/QA assets (live-window-demo.png, qa-*.png) under outputs/.
+outputs/**/live-window.png
+outputs/**/live-window-public.png
+outputs/**/crop-*.png
+outputs/**/orig-*.png
+outputs/**/strip-*.png
+outputs/**/meas-*.png
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

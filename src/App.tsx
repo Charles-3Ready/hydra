@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useState, type MouseEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type MouseEvent,
+} from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { open } from "@tauri-apps/plugin-dialog";
@@ -28,6 +35,8 @@ import "./App.css";
 const APP_NAME = "Hydra";
 const APP_SUBTITLE = "Profile Control // Rev 01";
 const THEME_KEY = "hydra-theme";
+/** How often usage + profile list re-poll while the window is open. */
+const USAGE_POLL_MS = 30_000;
 
 type Theme = "day" | "night";
 
@@ -215,6 +224,12 @@ function App() {
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState("Ready");
   const [lastPoll, setLastPoll] = useState<Date | null>(null);
+  const busyRef = useRef<string | null>(null);
+  const usageInFlight = useRef(false);
+
+  useEffect(() => {
+    busyRef.current = busy;
+  }, [busy]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -283,50 +298,75 @@ function App() {
 
   const load = useCallback(async () => {
     try {
-      setProfiles(await invoke<Profile[]>("list_profiles"));
+      const items = await invoke<Profile[]>("list_profiles");
+      setProfiles(items);
+      return items;
     } catch (error) {
       setMessage(errorMessage(error));
+      return null;
     }
   }, []);
 
-  useEffect(() => {
-    void load();
-    void refreshInstances();
-  }, [load, refreshInstances]);
+  const fetchUsage = useCallback(
+    async (items: Profile[], options?: { quiet?: boolean }) => {
+      if (!items.length) {
+        setUsage({});
+        return;
+      }
+      if (usageInFlight.current) return;
+      usageInFlight.current = true;
+      const quiet = Boolean(options?.quiet);
+      if (!quiet) setBusy("usage");
+      try {
+        const results = await Promise.all(
+          items.map(async (profile) => {
+            try {
+              return await invoke<Usage>("get_profile_usage", {
+                profileId: profile.id,
+              });
+            } catch (error) {
+              return {
+                profileId: profile.id,
+                label: "Unavailable",
+                error: errorMessage(error),
+                source: "unavailable",
+              } satisfies Usage;
+            }
+          }),
+        );
+        setUsage(Object.fromEntries(results.map((item) => [item.profileId, item])));
+        setLastPoll(new Date());
+        if (!quiet) setMessage("Usage refreshed");
+      } finally {
+        usageInFlight.current = false;
+        if (!quiet) setBusy((current) => (current === "usage" ? null : current));
+      }
+    },
+    [],
+  );
 
-  useEffect(() => {
-    const id = window.setInterval(() => void refreshInstances(), 5000);
-    return () => window.clearInterval(id);
-  }, [refreshInstances]);
-
-  const refreshUsage = useCallback(async (items = profiles) => {
-    if (!items.length) return;
-    setBusy("usage");
-    const results = await Promise.all(
-      items.map(async (profile) => {
-        try {
-          return await invoke<Usage>("get_profile_usage", {
-            profileId: profile.id,
-          });
-        } catch (error) {
-          return {
-            profileId: profile.id,
-            label: "Unavailable",
-            error: errorMessage(error),
-            source: "unavailable",
-          } satisfies Usage;
+  // Full dashboard refresh: profiles, Grok sessions, and usage.
+  // Manual path shows busy state; quiet path is for auto-poll / focus.
+  const refreshDashboard = useCallback(
+    async (options?: { quiet?: boolean }) => {
+      const quiet = Boolean(options?.quiet);
+      if (quiet && busyRef.current) return;
+      if (!quiet) setBusy("usage");
+      try {
+        const items = await load();
+        await refreshInstances();
+        if (items) {
+          await fetchUsage(items, { quiet: true });
         }
-      }),
-    );
-    setUsage(Object.fromEntries(results.map((item) => [item.profileId, item])));
-    setLastPoll(new Date());
-    setBusy(null);
-    setMessage("Usage refreshed");
-  }, [profiles]);
-
-  useEffect(() => {
-    if (profiles.length) void refreshUsage(profiles);
-  }, [profiles.length]);
+        if (!quiet) setMessage("Dashboard refreshed");
+      } catch (error) {
+        if (!quiet) setMessage(errorMessage(error));
+      } finally {
+        if (!quiet) setBusy((current) => (current === "usage" ? null : current));
+      }
+    },
+    [fetchUsage, load, refreshInstances],
+  );
 
   // Silent token renewal: renews any expired / near-expiry profile so usage
   // stays live and switching never lands on a dead token. Returns the fresh
@@ -342,13 +382,52 @@ function App() {
     }
   }, []);
 
-  // Renew tokens on launch, then keep them fresh on a timer without any user
-  // action — this is what turns Hydra into a set-and-forget dashboard.
+  // Initial load + renew tokens, then keep the dashboard live.
   useEffect(() => {
-    void refreshAllStale();
-    const id = window.setInterval(() => void refreshAllStale(), 60_000);
-    return () => window.clearInterval(id);
-  }, [refreshAllStale]);
+    let disposed = false;
+
+    const boot = async () => {
+      await refreshAllStale();
+      if (disposed) return;
+      await refreshDashboard({ quiet: true });
+    };
+
+    void boot();
+
+    const usageTimer = window.setInterval(() => {
+      if (disposed) return;
+      void refreshDashboard({ quiet: true });
+    }, USAGE_POLL_MS);
+
+    const tokenTimer = window.setInterval(() => {
+      if (disposed) return;
+      void refreshAllStale();
+    }, 60_000);
+
+    const instanceTimer = window.setInterval(() => {
+      if (disposed) return;
+      void refreshInstances();
+    }, 5_000);
+
+    const onFocus = () => {
+      if (disposed) return;
+      void refreshDashboard({ quiet: true });
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") onFocus();
+    };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibility);
+
+    return () => {
+      disposed = true;
+      window.clearInterval(usageTimer);
+      window.clearInterval(tokenTimer);
+      window.clearInterval(instanceTimer);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [refreshAllStale, refreshDashboard, refreshInstances]);
 
   // Re-render the countdown labels each minute even when nothing else changes.
   const [, setTick] = useState(0);
@@ -361,8 +440,8 @@ function App() {
     setBusy(`refresh-${profile.id}`);
     try {
       await invoke<Profile>("refresh_profile", { profileId: profile.id });
-      await load();
-      await refreshUsage();
+      const items = await load();
+      if (items) await fetchUsage(items, { quiet: true });
       setMessage(`Renewed token for ${profile.name}`);
     } catch (error) {
       setMessage(errorMessage(error));
@@ -553,6 +632,22 @@ function App() {
           </div>
 
           <button
+            type="button"
+            className="header-refresh-button"
+            title="Refresh profiles and usage"
+            aria-label="Refresh profiles and usage"
+            aria-busy={busy === "usage"}
+            onClick={() => void refreshDashboard()}
+            disabled={busy === "usage"}
+          >
+            <RefreshCw
+              size={16}
+              aria-hidden="true"
+              className={busy === "usage" ? "spin" : ""}
+            />
+          </button>
+
+          <button
             className="add-account-button"
             onClick={() => void loginAndImport()}
             disabled={busy === "login"}
@@ -684,7 +779,7 @@ function App() {
             aria-valuemax={100}
             aria-valuenow={Math.round(activeUsage.percent)}
           >
-            <span style={{ width: `${activeUsage.percent}%` }} />
+            <span style={{ ["--meter-fill" as string]: String(activeUsage.percent / 100) }} />
           </div>
           <p>{activeUsage.detail || activeUsage.headline}</p>
         </div>
@@ -775,7 +870,7 @@ function App() {
                       aria-valuemax={100}
                       aria-valuenow={Math.round(copy.percent)}
                     >
-                      <span style={{ width: `${copy.percent}%` }} />
+                      <span style={{ ["--meter-fill" as string]: String(copy.percent / 100) }} />
                     </div>
                     <small>{copy.detail}</small>
                   </div>
@@ -856,13 +951,13 @@ function App() {
 
       <footer className="status-rail">
         <span className="status-cell auto-refresh-state">
-          <i aria-hidden="true" /> AUTO REFRESH: ENABLED
+          <i aria-hidden="true" /> AUTO REFRESH: {Math.round(USAGE_POLL_MS / 1000)}S
         </span>
         <span className="status-cell">LAST POLL {formatPoll(lastPoll)}</span>
         <button
           className="manual-refresh-button"
-          onClick={() => void refreshUsage()}
-          disabled={busy === "usage" || profiles.length === 0}
+          onClick={() => void refreshDashboard()}
+          disabled={busy === "usage"}
           aria-busy={busy === "usage"}
         >
           MANUAL REFRESH

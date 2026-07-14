@@ -12,7 +12,9 @@ between them cleanly, and spend less time re-logging when tokens go stale.
 
 ## Features
 
-- **Strengthened silent token renewal** — auto-refresh keeps stored profiles
+- **Live dashboard refresh** — usage, profiles, and sessions re-poll every 30s
+  (and on window focus); header + footer Manual Refresh when you want it now
+- **Strengthened silent token renewal** — background renew keeps stored profiles
   ready so you re-login less when sessions go stale
 - Official `grok login` with automatic local profile import
 - Manual import from the current or a selected `auth.json`
@@ -23,6 +25,14 @@ between them cleanly, and spend less time re-logging when tokens go stale.
 - Frameless night-first console UI with icon theme toggle and hide-to-tray
 - Local-only credential storage under `~/.hydra`
 - System tray open / quit; multi-resolution Windows icon
+
+<p align="center">
+  <img src="docs/social/post/hydra-features-16x9.png" alt="What Hydra does now" width="900" />
+</p>
+
+<p align="center">
+  <img src="docs/social/post/hydra-app-night.png" alt="Hydra night dashboard" width="720" />
+</p>
 
 ## Verify a switch
 
@@ -37,10 +47,10 @@ The account shown by Grok should match the active profile in Hydra.
 ## Install (Windows)
 
 Download the latest release from
-[GitHub Releases](https://github.com/LuNex-Inc/hydra/releases):
+[GitHub Releases](https://github.com/LuNexInc/hydra/releases):
 
-- `Hydra_1.1.0_x64-setup.exe` — NSIS installer (recommended)
-- `Hydra_1.1.0_x64_en-US.msi` — MSI
+- `Hydra_1.1.1_x64-setup.exe` — NSIS installer (recommended)
+- `Hydra_1.1.1_x64_en-US.msi` — MSI
 
 ## Build
 

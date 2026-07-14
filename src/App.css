@@ -246,6 +246,7 @@ summary:focus-visible {
 .row-actions,
 .launch-button,
 .add-account-button,
+.header-refresh-button,
 .manual-refresh-button,
 .metal-button,
 .menu-panel button,
@@ -344,6 +345,23 @@ summary:focus-visible {
 .theme-icon-button:hover:not([aria-pressed="true"]) {
   color: var(--ink);
   background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.header-refresh-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  min-height: 44px;
+  padding: 0;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  background: var(--surface-raised);
+}
+
+.header-refresh-button:hover:not(:disabled) {
+  color: var(--accent-light);
+  background: color-mix(in srgb, var(--surface-raised) 80%, var(--accent) 20%);
 }
 
 .window-controls {
@@ -584,10 +602,13 @@ summary:focus-visible {
 .capacity-meter > span,
 .row-meter > span {
   display: block;
+  width: 100%;
   height: 100%;
+  transform: scaleX(var(--meter-fill, 0));
+  transform-origin: left center;
   background: linear-gradient(90deg, var(--meter-used-deep), var(--meter-used));
   box-shadow: 0 0 12px 0 color-mix(in srgb, var(--meter-used) 75%, transparent);
-  transition: width 280ms ease-out;
+  transition: transform 280ms ease-out;
 }
 
 .meter-unavailable {
@@ -596,7 +617,7 @@ summary:focus-visible {
 }
 
 .meter-unavailable > span {
-  width: 100% !important;
+  --meter-fill: 1;
   opacity: 0.24;
   background: repeating-linear-gradient(135deg, var(--faint) 0 6px, transparent 6px 12px);
   box-shadow: none;
