@@ -7,7 +7,7 @@ Grok CLI. Keep personal, work, client, and testing heads on one machine, switch
 between them cleanly, and spend less time re-logging when tokens go stale.
 
 <p align="center">
-  <img src="docs/social/post/hydra-hero-16x9.png" alt="Hydra — Many Heads. One Command." width="900" />
+  <img src="docs/social/post/hydra-hero-v2-16x9.png" alt="Hydra — Many Heads. One Command." width="900" />
 </p>
 
 ## Features
