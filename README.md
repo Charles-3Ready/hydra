@@ -24,14 +24,6 @@ between them cleanly, and spend less time re-logging when tokens go stale.
 - Local-only credential storage under `~/.hydra`
 - System tray open / quit; multi-resolution Windows icon
 
-<p align="center">
-  <img src="docs/social/post/hydra-features-16x9.png" alt="What Hydra does now" width="900" />
-</p>
-
-<p align="center">
-  <img src="docs/social/post/hydra-app-night.png" alt="Hydra night dashboard" width="720" />
-</p>
-
 ## Verify a switch
 
 Start a new Grok session after switching and run:
